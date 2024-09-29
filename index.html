@@ -137,47 +137,45 @@
 
 <script>
     let selectedPlaces = [];
-    let savedSelections = [];
+    let savedSelections = JSON.parse(localStorage.getItem('savedSelections')) || []; // 從localStorage載入已保存的選擇
     let currentCity = ''; // 追蹤當前城市
     let customPlaces = JSON.parse(localStorage.getItem('customPlaces')) || { osaka: [], tokyo: [], hokkaido: [] }; // 儲存每個城市的自定義景點
 
     const places = {
         osaka: [
-    '道頓堀', '心齋橋', '環球影城', '黑門市場', '大阪城', 
-    '美國村', '天保山海遊館', '通天閣', '天王寺動物園', 
-    '奈良鹿公園', '東大寺', '四天王寺', '梅田藍天大廈', 
-    '大阪科學館', '住之江水族館', '法善寺', '九條市場', 
-    '谷町六丁目', '新世界', '大阪市立美術館', '貓之森',
-    '淀川河川公園', '南港ATC', '中之島', '御堂筋', 
-    '吹田市立博物館', '日之出大廈', '大阪環狀線', '松下電器博物館', 
-    '千里中央', '岸和田城', '堺市博物館', '泉佐野市',
-    '泉北高速鐵道', '堺市立文化館', '天王寺', '舞洲',
-    '長居公園', '兵庫縣立美術館', '福島區', '阿倍野',
-],
+            '道頓堀', '心齋橋', '環球影城', '黑門市場', '大阪城', 
+            '美國村', '天保山海遊館', '通天閣', '天王寺動物園', 
+            '奈良鹿公園', '東大寺', '四天王寺', '梅田藍天大廈', 
+            '大阪科學館', '住之江水族館', '法善寺', '九條市場', 
+            '谷町六丁目', '新世界', '大阪市立美術館', '貓之森',
+            '淀川河川公園', '南港ATC', '中之島', '御堂筋', 
+            '吹田市立博物館', '日之出大廈', '大阪環狀線', '松下電器博物館', 
+            '千里中央', '岸和田城', '堺市博物館', '泉佐野市',
+            '泉北高速鐵道', '堺市立文化館', '天王寺', '舞洲',
+            '長居公園', '兵庫縣立美術館', '福島區', '阿倍野',
+        ],
         tokyo: [
-    '淺草寺', '東京塔', '迪士尼樂園', '秋葉原', '澀谷交叉口',
-    '新宿御苑', '原宿', '東京晴空塔', '築地市場', '上野公園', 
-    '代代木公園', '淺草文化觀光中心', '東京國立博物館', '六本木之丘', 
-    '池袋陽光城', '秋葉原電器街', '銀座', '澀谷109', 
-    '新宿歌舞伎町', '多摩動物園', '歌舞伎座', '橫濱',
-    '台場', '上野動物園', '東京巨蛋', '谷中',
-    '駒澤公園', '千鳥町', '表參道', '皇居',
-    '東京藝大', '神保町', '三鷹之森吉卜力美術館', '東京都廳',
-    '成田山新勝寺', '根津神社', '日比谷公園', '國立西洋美術館',
-]
-,
+            '淺草寺', '東京塔', '迪士尼樂園', '秋葉原', '澀谷交叉口',
+            '新宿御苑', '原宿', '東京晴空塔', '築地市場', '上野公園', 
+            '代代木公園', '淺草文化觀光中心', '東京國立博物館', '六本木之丘', 
+            '池袋陽光城', '秋葉原電器街', '銀座', '澀谷109', 
+            '新宿歌舞伎町', '多摩動物園', '歌舞伎座', '橫濱',
+            '台場', '上野動物園', '東京巨蛋', '谷中',
+            '駒澤公園', '千鳥町', '表參道', '皇居',
+            '東京藝大', '神保町', '三鷹之森吉卜力美術館', '東京都廳',
+            '成田山新勝寺', '根津神社', '日比谷公園', '國立西洋美術館',
+        ],
         hokkaido: [
-    '大通公園', '小樽運河', '富良野花田', '札幌電視塔', '登別地獄谷',
-    '藻岩山', '旭山動物園', '支笏湖', '函館夜景', '富良野滑雪場',
-    '小樽運河玻璃工藝', '白色戀人公園', '札幌啤酒園', '北海道神宮',
-    '摩周湖', '北見市', '大雪山', '網走監獄',
-    '釧路濕原', '十勝平原', '美瑛花田', '富良野薰衣草',
-    '支笏湖溫泉', '幌延町', '根室市', '利尻島',
-    '羅臼', '根室半島', '北見市釧路', '登別溫泉',
-    '西表島', '美瑛青池', '厚岸湖', '室蘭',
-    '札幌羊之丘展望台', '滝川市', '白老', '天塩川',
-]
-
+            '大通公園', '小樽運河', '富良野花田', '札幌電視塔', '登別地獄谷',
+            '藻岩山', '旭山動物園', '支笏湖', '函館夜景', '富良野滑雪場',
+            '小樽運河玻璃工藝', '白色戀人公園', '札幌啤酒園', '北海道神宮',
+            '摩周湖', '北見市', '大雪山', '網走監獄',
+            '釧路濕原', '十勝平原', '美瑛花田', '富良野薰衣草',
+            '支笏湖溫泉', '幌延町', '根室市', '利尻島',
+            '羅臼', '根室半島', '北見市釧路', '登別溫泉',
+            '西表島', '美瑛青池', '厚岸湖', '室蘭',
+            '札幌羊之丘展望台', '滝川市', '白老', '天塩川',
+        ]
     };
 
     function showPlaces(city) {
@@ -189,69 +187,67 @@
         places[city].forEach(place => {
             const button = document.createElement('button');
             button.textContent = place;
-            button.onclick = function() { showPlace(this, place); };
+            button.onclick = function() {
+                selectPlace(place);
+            };
             placesButtonsContainer.appendChild(button);
         });
+
+        currentCity = city; // 更新當前城市
 
         // 顯示自定義景點
-        customPlaces[city].forEach(customPlace => {
+        customPlaces[city].forEach(place => {
             const button = document.createElement('button');
-            button.textContent = customPlace;
-            button.onclick = function() { showPlace(this, customPlace); };
+            button.textContent = place;
+            button.onclick = function() {
+                selectPlace(place);
+            };
             placesButtonsContainer.appendChild(button);
         });
-
-        currentCity = city;
     }
 
-    function showPlace(button, placeName) {
-        if (selectedPlaces.includes(placeName) || selectedPlaces.length >= 10) {
-            alert("選擇的景點數量已達上限（10個）。");
-            return;
-        }
-
-        selectedPlaces.push(placeName);
-        button.classList.add('disabled');
+    function selectPlace(place) {
+        selectedPlaces.push(place);
         updateHistoryDisplay();
+    }
+
+    function updateHistoryDisplay() {
+        const historyDisplay = document.getElementById('historyDisplay');
+        historyDisplay.textContent = selectedPlaces.join(', ');
+        updateSavedRecordsDisplay(); // 更新保存記錄顯示
     }
 
     function clearAll() {
         selectedPlaces = [];
-        document.getElementById('historyDisplay').innerHTML = '選擇歷史會顯示在這裡';
-        const buttons = document.querySelectorAll('.places-buttons button');
-        buttons.forEach(button => button.classList.remove('disabled'));
+        updateHistoryDisplay();
     }
 
     function saveSelection() {
         if (selectedPlaces.length > 0) {
-            const currentDay = savedSelections.length + 1;
-            const title = `第${currentDay}天`;
-            const record = `${title}: ${selectedPlaces.join(', ')}`;
-            savedSelections.push(record);
+            const date = new Date().toLocaleDateString();
+            const savedRecord = { date, places: [...selectedPlaces] };
+            savedSelections.push(savedRecord);
+            localStorage.setItem('savedSelections', JSON.stringify(savedSelections));
             updateSavedRecordsDisplay();
             clearAll();
+        } else {
+            alert('請選擇一些景點');
         }
     }
 
     function updateSavedRecordsDisplay() {
         const savedRecordsDisplay = document.getElementById('savedRecordsDisplay');
-        savedRecordsDisplay.innerHTML = savedSelections.map(record => record.replace(': ', '<br>')).join('<br>');
-    }
-
-    function updateHistoryDisplay() {
-        const historyDisplay = document.getElementById('historyDisplay');
-        historyDisplay.innerHTML = selectedPlaces.join('<br>');
+        savedRecordsDisplay.innerHTML = '保存的選擇：<br>' + savedSelections.map(record => `${record.date}: ${record.places.join(', ')}`).join('<br>');
     }
 
     function deleteLastSaved() {
-        if (savedSelections.length > 0) {
-            savedSelections.pop();
-            updateSavedRecordsDisplay();
-        }
+        savedSelections.pop(); // 刪除最後一條保存的紀錄
+        localStorage.setItem('savedSelections', JSON.stringify(savedSelections));
+        updateSavedRecordsDisplay();
     }
 
     function exportToFile() {
-        const blob = new Blob([savedSelections.join('\n')], { type: 'text/plain' });
+        const blob = new Blob([JSON.stringify(savedSelections)], { type: 'text/plain' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.download = 'saved_selections.txt';
@@ -262,8 +258,8 @@
         const file = event.target.files[0];
         const reader = new FileReader();
         reader.onload = function(e) {
-            const contents = e.target.result.split('\n');
-            savedSelections = contents.filter(record => record);
+            savedSelections = JSON.parse(e.target.result);
+            localStorage.setItem('savedSelections', JSON.stringify(savedSelections));
             updateSavedRecordsDisplay();
         };
         reader.readAsText(file);
@@ -272,35 +268,35 @@
     function addCustomPlace() {
         const customPlaceInput = document.getElementById('customPlaceInput');
         const customPlace = customPlaceInput.value.trim();
-        if (customPlace && currentCity) {
-            customPlaces[currentCity].push(customPlace);
+        if (customPlace !== '') {
+            customPlaces[currentCity].push(customPlace); // 將自定義景點加入對應城市
             localStorage.setItem('customPlaces', JSON.stringify(customPlaces));
-            showPlaces(currentCity);
-            customPlaceInput.value = '';
+            customPlaceInput.value = ''; // 清空輸入框
+            showPlaces(currentCity); // 更新按鈕顯示
         }
     }
 
-    // 刪除全部自定義景點按鈕功能
     function deleteAllCustomPlaces() {
-        if (currentCity && customPlaces[currentCity].length > 0) {
-            customPlaces[currentCity] = [];
-            localStorage.setItem('customPlaces', JSON.stringify(customPlaces));
-            showPlaces(currentCity);
-        }
+        customPlaces[currentCity] = []; // 清空對應城市的自定義景點
+        localStorage.setItem('customPlaces', JSON.stringify(customPlaces));
+        showPlaces(currentCity); // 更新按鈕顯示
     }
 
-    function scrollToTop() {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
+    // 添加滾動到頂部的按鈕
     window.onscroll = function() {
-        const scrollToTopButton = document.getElementById('scrollToTop');
+        const scrollToTopButton = document.getElementById("scrollToTop");
         if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
-            scrollToTopButton.style.display = 'block';
+            scrollToTopButton.style.display = "block";
         } else {
-            scrollToTopButton.style.display = 'none';
+            scrollToTopButton.style.display = "none";
         }
     };
+
+    function scrollToTop() {
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+    }
 </script>
+
 </body>
 </html>
