@@ -223,7 +223,7 @@
     function updateHistoryDisplay() {
         const historyDisplay = document.getElementById('historyDisplay');
         historyDisplay.innerHTML = selectedPlaces.length > 0 
-            ? '你選擇的景點：' + selectedPlaces.join(', ') 
+            ? '你選擇的景點：' + selectedPlaces.join('<br>') 
             : '選擇歷史會顯示在這裡';
     }
 
