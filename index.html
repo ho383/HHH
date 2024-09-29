@@ -109,9 +109,9 @@
     </div>
     <div class="places">
         <div class="controls">
-            <button onclick="clearAll()">清除選擇</button>
-            <button onclick="saveSelection()">保存選擇</button>
-            <button onclick="deleteLastSaved()">刪除最後選擇</button>
+            <button onclick="clearAll()">清除已選</button>
+            <button onclick="saveSelection()">保存</button>
+            <button onclick="deleteLastSaved()">刪除</button>
             <button onclick="exportToFile()">匯出txt</button>
             <input type="file" id="fileInput" accept=".txt" style="display:none" onchange="importFromFile(event)">
             <button onclick="document.getElementById('fileInput').click()">匯入txt</button>
@@ -324,4 +324,3 @@
 
 </body>
 </html>
-
