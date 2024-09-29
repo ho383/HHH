@@ -105,8 +105,8 @@
     <div class="places">
         <div class="controls">
             <button onclick="clearAll()">清除選擇</button>
-            <button onclick="saveSelection()">保存選擇</button>
-            <button onclick="deleteLastSaved()">刪除最後選擇</button>
+            <button onclick="saveSelection()">保存一天</button>
+            <button onclick="deleteLastSaved()">刪除一天</button>
             <button onclick="exportToFile()">匯出txt</button>
             <input type="file" id="fileInput" accept=".txt" style="display:none" onchange="importFromFile(event)">
             <button onclick="document.getElementById('fileInput').click()">匯入txt</button>
@@ -125,7 +125,7 @@
         </div>
 
         <!-- 自訂義景點輸入 -->
-        <div class="input-container">
+        <div class="input-container" id="customPlaceInputContainer">
             <input type="text" id="customPlaceInput" placeholder="請輸入文字">
             <button onclick="addCustomPlace()">新增</button>
             <button onclick="deleteAllCustomPlaces()">刪除全部</button> <!-- 刪除全部按鈕 -->
@@ -137,28 +137,28 @@
 
 <script>
     let selectedPlaces = [];
-    let savedSelections = JSON.parse(localStorage.getItem('savedSelections')) || []; // 讀取已保存的選擇
+    let savedSelections = [];
     let currentCity = ''; // 追蹤當前城市
     let customPlaces = JSON.parse(localStorage.getItem('customPlaces')) || { osaka: [], tokyo: [], hokkaido: [] }; // 儲存每個城市的自定義景點
 
     const places = {
         osaka: [
-            '道頓堀', '心齋橋', '環球影城', '黑門市場', '大阪城', 
-            '美國村', '天保山海遊館', '通天閣', '天王寺動物園', 
-            '奈良鹿公園', '東大寺', '四天王寺', '梅田藍天大廈', 
-            '大阪科學館', '住之江水族館', '法善寺', '九條市場', 
+            '道頓堀', '心齋橋', '環球影城', '黑門市場', '大阪城',
+            '美國村', '天保山海遊館', '通天閣', '天王寺動物園',
+            '奈良鹿公園', '東大寺', '四天王寺', '梅田藍天大廈',
+            '大阪科學館', '住之江水族館', '法善寺', '九條市場',
             '谷町六丁目', '新世界', '大阪市立美術館', '貓之森',
-            '淀川河川公園', '南港ATC', '中之島', '御堂筋', 
-            '吹田市立博物館', '日之出大廈', '大阪環狀線', '松下電器博物館', 
+            '淀川河川公園', '南港ATC', '中之島', '御堂筋',
+            '吹田市立博物館', '日之出大廈', '大阪環狀線', '松下電器博物館',
             '千里中央', '岸和田城', '堺市博物館', '泉佐野市',
             '泉北高速鐵道', '堺市立文化館', '天王寺', '舞洲',
             '長居公園', '兵庫縣立美術館', '福島區', '阿倍野',
         ],
         tokyo: [
             '淺草寺', '東京塔', '迪士尼樂園', '秋葉原', '澀谷交叉口',
-            '新宿御苑', '原宿', '東京晴空塔', '築地市場', '上野公園', 
-            '代代木公園', '淺草文化觀光中心', '東京國立博物館', '六本木之丘', 
-            '池袋陽光城', '秋葉原電器街', '銀座', '澀谷109', 
+            '新宿御苑', '原宿', '東京晴空塔', '築地市場', '上野公園',
+            '代代木公園', '淺草文化觀光中心', '東京國立博物館', '六本木之丘',
+            '池袋陽光城', '秋葉原電器街', '銀座', '澀谷109',
             '新宿歌舞伎町', '多摩動物園', '歌舞伎座', '橫濱',
             '台場', '上野動物園', '東京巨蛋', '谷中',
             '駒澤公園', '千鳥町', '表參道', '皇居',
@@ -187,107 +187,99 @@
         places[city].forEach(place => {
             const button = document.createElement('button');
             button.textContent = place;
-            button.onclick = () => selectPlace(place);
+            button.onclick = function() { showPlace(this, place); };
             placesButtonsContainer.appendChild(button);
         });
 
+        // 顯示自定義景點
+        if (customPlaces[city].length > 0) {
+            customPlaces[city].forEach(place => {
+                const button = document.createElement('button');
+                button.textContent = place;
+                button.onclick = function() { showPlace(this, place); };
+                placesButtonsContainer.appendChild(button);
+            });
+        }
+
         currentCity = city; // 更新當前城市
-        loadCustomPlaces(); // 載入自訂義景點
     }
 
-    function selectPlace(place) {
-        if (selectedPlaces.length < 10) { // 限制最多選擇5個
-            selectedPlaces.push(place);
-            updateDisplay();
-            updateSaveButton();
-            updateCustomButtonState();
+    function showPlace(button, place) {
+        if (selectedPlaces.length < 10) { // 限制10個選擇
+            button.classList.toggle('selected');
+            if (selectedPlaces.includes(place)) {
+                selectedPlaces = selectedPlaces.filter(p => p !== place);
+            } else {
+                selectedPlaces.push(place);
+            }
         } else {
-            alert('最多只能選擇10個景點');
+            alert('最多只能選擇10個景點！');
         }
+        updateDisplay();
+        updateSaveButton();
     }
 
     function updateDisplay() {
         const historyDisplay = document.getElementById('historyDisplay');
-        historyDisplay.innerHTML = '已選擇的景點：' + selectedPlaces.join(', ');
+        historyDisplay.textContent = selectedPlaces.join(', ') || '選擇歷史會顯示在這裡';
     }
 
     function updateSaveButton() {
-        const saveButton = document.querySelector('.controls button:nth-child(2)');
-        saveButton.disabled = selectedPlaces.length === 0;
+        const saveButton = document.querySelector('.controls button:nth-child(2)'); // 保存按鈕
+        if (selectedPlaces.length > 0) {
+            saveButton.classList.remove('disabled');
+        } else {
+            saveButton.classList.add('disabled');
+        }
     }
 
     function saveSelection() {
         if (selectedPlaces.length > 0) {
-            savedSelections.push({ day: savedSelections.length + 1, places: selectedPlaces });
+            const dateLabel = `第 ${savedSelections.length + 1} 天:`;
+            savedSelections.push({ date: dateLabel, places: [...selectedPlaces] });
             localStorage.setItem('savedSelections', JSON.stringify(savedSelections));
-            updateSavedRecordsDisplay();
+            loadSavedSelections();
             clearSelection();
         }
     }
 
-    function clearAll() {
-        selectedPlaces = [];
-        updateDisplay();
-        updateSaveButton();
-        updateCustomButtonState();
-    }
-
-    function deleteLastSaved() {
-        savedSelections.pop();
-        localStorage.setItem('savedSelections', JSON.stringify(savedSelections));
-        updateSavedRecordsDisplay();
-    }
-
-    function updateSavedRecordsDisplay() {
+    function loadSavedSelections() {
         const savedRecordsDisplay = document.getElementById('savedRecordsDisplay');
         savedRecordsDisplay.innerHTML = '保存的選擇：<br>';
         savedSelections.forEach(selection => {
-            savedRecordsDisplay.innerHTML += `第 ${selection.day} 天: ${selection.places.join(', ')}<br>`;
+            savedRecordsDisplay.innerHTML += `${selection.date} ${selection.places.join(', ')}<br>`;
         });
     }
 
     function clearSelection() {
         selectedPlaces = [];
+        const buttons = document.querySelectorAll('.places-buttons button');
+        buttons.forEach(button => button.classList.remove('selected'));
         updateDisplay();
         updateSaveButton();
     }
 
-    function loadCustomPlaces() {
-        const customPlacesContainer = document.getElementById('customPlaceInputContainer');
-        customPlacesContainer.innerHTML = '';
-        if (currentCity) {
-            customPlaces[currentCity].forEach(customPlace => {
-                const button = document.createElement('button');
-                button.textContent = customPlace;
-                button.onclick = () => selectPlace(customPlace);
-                customPlacesContainer.appendChild(button);
-            });
-        }
-    }
-
-    function addCustomPlace() {
-        const customPlaceInput = document.getElementById('customPlaceInput');
-        const customPlace = customPlaceInput.value.trim();
-        if (customPlace && currentCity) {
-            customPlaces[currentCity].push(customPlace);
-            localStorage.setItem('customPlaces', JSON.stringify(customPlaces));
-            customPlaceInput.value = '';
-            loadCustomPlaces();
-        } else {
-            alert('請輸入有效的自訂景點');
-        }
+    function deleteLastSaved() {
+        savedSelections.pop();
+        localStorage.setItem('savedSelections', JSON.stringify(savedSelections));
+        loadSavedSelections();
     }
 
     function deleteAllCustomPlaces() {
-        if (currentCity) {
-            customPlaces[currentCity] = [];
-            localStorage.setItem('customPlaces', JSON.stringify(customPlaces));
-            loadCustomPlaces();
-        }
+        customPlaces[currentCity] = [];
+        localStorage.setItem('customPlaces', JSON.stringify(customPlaces));
+        showPlaces(currentCity); // 重新顯示
     }
 
-    function scrollToTop() {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    function addCustomPlace() {
+        const input = document.getElementById('customPlaceInput');
+        const placeName = input.value.trim();
+        if (placeName && !customPlaces[currentCity].includes(placeName)) {
+            customPlaces[currentCity].push(placeName);
+            localStorage.setItem('customPlaces', JSON.stringify(customPlaces));
+            showPlaces(currentCity); // 重新顯示
+            input.value = ''; // 清空輸入框
+        }
     }
 
     function exportToFile() {
@@ -295,7 +287,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'savedSelections.json';
+        a.download = 'saved_selections.json';
         a.click();
         URL.revokeObjectURL(url);
     }
@@ -303,19 +295,24 @@
     function importFromFile(event) {
         const file = event.target.files[0];
         const reader = new FileReader();
-        reader.onload = function(event) {
-            const data = JSON.parse(event.target.result);
-            savedSelections = data;
+        reader.onload = function(e) {
+            const importedData = JSON.parse(e.target.result);
+            savedSelections = importedData;
             localStorage.setItem('savedSelections', JSON.stringify(savedSelections));
-            updateSavedRecordsDisplay();
+            loadSavedSelections();
         };
         reader.readAsText(file);
     }
 
-    // 自動讀取資料
+    function scrollToTop() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 在加載頁面時讀取資料
     window.onload = function() {
-        updateSavedRecordsDisplay();
-        loadCustomPlaces();
+        savedSelections = JSON.parse(localStorage.getItem('savedSelections')) || [];
+        customPlaces = JSON.parse(localStorage.getItem('customPlaces')) || { osaka: [], tokyo: [], hokkaido: [] };
+        loadSavedSelections();
     };
 </script>
 </body>
