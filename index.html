@@ -235,7 +235,7 @@
 
     function saveSelection() {
         if (selectedPlaces.length > 0) {
-            const dateLabel = 第 ${savedSelections.length + 1} 天:;
+            const dateLabel = `第 ${savedSelections.length + 1} 天:`;
             savedSelections.push({ date: dateLabel, places: [...selectedPlaces] });
             localStorage.setItem('savedSelections', JSON.stringify(savedSelections));
             loadSavedSelections();
@@ -247,7 +247,7 @@
         const savedRecordsDisplay = document.getElementById('savedRecordsDisplay');
         savedRecordsDisplay.innerHTML = '保存的選擇：<br>';
         savedSelections.forEach(selection => {
-            savedRecordsDisplay.innerHTML += ${selection.date} ${selection.places.join(', ')}<br>;
+            savedRecordsDisplay.innerHTML += `${selection.date} ${selection.places.join(', ')}<br>`;
         });
     }
 
