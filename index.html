@@ -286,7 +286,7 @@
         const blob = new Blob([savedSelections.join('\n')], { type: 'text/plain' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = 'saved_selections.txt';
+        link.download = 'myTravel.txt';
         link.click();
     }
 
