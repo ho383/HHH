@@ -105,23 +105,26 @@
     <div class="places">
         <div class="controls">
             <button onclick="clearAll()">清除選擇</button>
-            <button onclick="saveSelection()">保存選擇</button>
-            <button onclick="deleteLastSaved()">刪除最後選擇</button>
+            <button onclick="saveSelection()">保存一天</button>
+            <button onclick="deleteLastSaved()">刪除一天</button>
             <button onclick="exportToFile()">匯出txt</button>
             <input type="file" id="fileInput" accept=".txt" style="display:none" onchange="importFromFile(event)">
             <button onclick="document.getElementById('fileInput').click()">匯入txt</button>
         </div>
 
+        <!-- 新增城市分類按鈕 -->
         <div class="places-buttons">
             <button onclick="showPlaces('osaka')">大阪</button>
             <button onclick="showPlaces('tokyo')">東京</button>
             <button onclick="showPlaces('hokkaido')">北海道</button>
         </div>
 
+        <!-- 旅遊景點按鈕 -->
         <div class="places-buttons" id="placesButtonsContainer">
             <!-- 大阪的景點 -->
         </div>
 
+        <!-- 自訂義景點輸入 -->
         <div class="input-container" id="customPlaceInputContainer">
             <input type="text" id="customPlaceInput" placeholder="請輸入文字">
             <button onclick="addCustomPlace()">新增</button>
@@ -172,7 +175,7 @@
             '羅臼', '根室半島', '北見市釧路', '登別溫泉',
             '西表島', '美瑛青池', '厚岸湖', '室蘭',
             '札幌羊之丘展望台', '滝川市', '白老', '天塩川',
-        ],
+        ]
     };
 
     function showPlaces(city) {
@@ -196,101 +199,108 @@
             placesButtonsContainer.appendChild(button);
         });
 
-        currentCity = city; // 設置當前城市
-        updateButtonStates(); // 更新按鈕狀態
+        currentCity = city; // 更新當前城市
     }
 
     function showPlace(button, place) {
-        if (selectedPlaces.includes(place)) {
-            alert('您已選擇此景點！');
-            return;
+        if (selectedPlaces.length < 10) { // 限制最多5個選擇
+            selectedPlaces.push(place);
+            button.disabled = true; // 禁用按鈕
+            button.classList.add('disabled');
+            updateHistoryDisplay();
+        } else {
+            alert("已選擇最多10個地點！");
         }
-        if (selectedPlaces.length >= 10) {
-            alert('最多只能選擇10個景點！');
-            return;
-        }
-
-        selectedPlaces.push(place);
-        button.classList.add('disabled'); // 禁用按鈕
-        updateHistoryDisplay();
     }
 
     function updateHistoryDisplay() {
         const historyDisplay = document.getElementById('historyDisplay');
-        historyDisplay.textContent = `已選擇的景點：${selectedPlaces.join(', ')}`;
+        historyDisplay.textContent = selectedPlaces.join(', ');
     }
 
     function saveSelection() {
-        if (selectedPlaces.length === 0) {
-            alert('請先選擇景點！');
-            return;
+        if (selectedPlaces.length > 0) {
+            savedSelections.push(selectedPlaces.join(', '));
+            const savedRecordsDisplay = document.getElementById('savedRecordsDisplay');
+            savedRecordsDisplay.innerHTML = '保存的選擇：<br>' + savedSelections.join('<br>');
+            clearSelection(); // 保存後清除當前選擇
+        } else {
+            alert("請選擇地點後再保存！");
         }
-
-        savedSelections.push(`第 ${savedSelections.length + 1} 天: ${selectedPlaces.join(', ')}`);
-        updateSavedRecords();
-        selectedPlaces = [];
-        updateHistoryDisplay();
     }
 
-    function updateSavedRecords() {
-        const savedRecordsDisplay = document.getElementById('savedRecordsDisplay');
-        savedRecordsDisplay.innerHTML = '保存的選擇：<br>' + savedSelections.join('<br>');
+    function clearSelection() {
+        selectedPlaces = [];
+        const historyDisplay = document.getElementById('historyDisplay');
+        historyDisplay.textContent = '';
+        const buttons = document.querySelectorAll('.places-buttons button');
+        buttons.forEach(button => {
+            button.disabled = false;
+            button.classList.remove('disabled');
+        });
     }
 
     function deleteLastSaved() {
-        savedSelections.pop();
-        updateSavedRecords();
-    }
-
-    function clearAll() {
-        selectedPlaces = [];
-        const placesButtonsContainer = document.getElementById('placesButtonsContainer');
-        Array.from(placesButtonsContainer.getElementsByTagName('button')).forEach(button => {
-            button.classList.remove('disabled');
-        });
-        updateHistoryDisplay();
-    }
-
-    function addCustomPlace() {
-        const customPlaceInput = document.getElementById('customPlaceInput');
-        const customPlace = customPlaceInput.value.trim();
-        if (customPlace === '') {
-            alert('請輸入自定義景點名稱！');
-            return;
+        if (savedSelections.length > 0) {
+            savedSelections.pop();
+            const savedRecordsDisplay = document.getElementById('savedRecordsDisplay');
+            savedRecordsDisplay.innerHTML = '保存的選擇：<br>' + savedSelections.join('<br>');
+        } else {
+            alert("沒有可刪除的選擇！");
         }
-
-        customPlaces[currentCity].push(customPlace);
-        localStorage.setItem('customPlaces', JSON.stringify(customPlaces)); // 儲存到 localStorage
-        showPlaces(currentCity); // 更新顯示的景點
-        customPlaceInput.value = ''; // 清空輸入框
-    }
-
-    function deleteAllCustomPlaces() {
-        customPlaces[currentCity] = [];
-        localStorage.setItem('customPlaces', JSON.stringify(customPlaces)); // 儲存到 localStorage
-        showPlaces(currentCity); // 更新顯示的景點
     }
 
     function exportToFile() {
         const blob = new Blob([savedSelections.join('\n')], { type: 'text/plain' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'saved_selections.txt';
-        link.click();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'selections.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     }
 
     function importFromFile(event) {
         const file = event.target.files[0];
         const reader = new FileReader();
         reader.onload = function(e) {
-            const contents = e.target.result;
-            savedSelections = contents.split('\n');
-            updateSavedRecords();
+            const content = e.target.result.split('\n');
+            savedSelections = content.filter(line => line.trim() !== '');
+            const savedRecordsDisplay = document.getElementById('savedRecordsDisplay');
+            savedRecordsDisplay.innerHTML = '保存的選擇：<br>' + savedSelections.join('<br>');
         };
         reader.readAsText(file);
     }
 
-    // 滾動到頂部的功能
+    function addCustomPlace() {
+        const customPlaceInput = document.getElementById('customPlaceInput');
+        const customPlace = customPlaceInput.value.trim();
+        if (customPlace) {
+            customPlaces[currentCity].push(customPlace); // 將自定義景點加入當前城市
+            localStorage.setItem('customPlaces', JSON.stringify(customPlaces));
+            const button = document.createElement('button');
+            button.textContent = customPlace;
+            button.onclick = function() { showPlace(this, customPlace); };
+            document.getElementById('placesButtonsContainer').appendChild(button);
+            customPlaceInput.value = ''; // 清空輸入框
+        } else {
+            alert("請輸入自定義地點！");
+        }
+    }
+
+    function deleteAllCustomPlaces() {
+        if (confirm("確定要刪除所有自定義景點嗎？")) {
+            customPlaces[currentCity] = [];
+            localStorage.setItem('customPlaces', JSON.stringify(customPlaces));
+            showPlaces(currentCity); // 重新顯示按鈕
+        }
+    }
+
+    function scrollToTop() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     window.onscroll = function() {
         const scrollToTopButton = document.getElementById('scrollToTop');
         if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
@@ -299,12 +309,8 @@
             scrollToTopButton.style.display = "none";
         }
     };
-
-    function scrollToTop() {
-        document.body.scrollTop = 0; 
-        document.documentElement.scrollTop = 0; 
-    }
 </script>
+
 </body>
 </html>
 
