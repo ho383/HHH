@@ -90,11 +90,6 @@
             padding: 10px;
             cursor: pointer;
         }
-        /* 新增選擇的顏色 */
-        .selected {
-            background-color: #007bff; /* 選擇後的顏色 */
-            color: white; /* 選擇後的文字顏色 */
-        }
     </style>
 </head>
 <body>
@@ -180,105 +175,119 @@
             '羅臼', '根室半島', '北見市釧路', '登別溫泉',
             '西表島', '美瑛青池', '厚岸湖', '室蘭',
             '札幌羊之丘展望台', '滝川市', '白老', '天塩川',
-        ],
+        ]
     };
 
     function showPlaces(city) {
-        currentCity = city; // 更新當前城市
+        selectedPlaces = [];
         const placesButtonsContainer = document.getElementById('placesButtonsContainer');
-        placesButtonsContainer.innerHTML = '';
+        placesButtonsContainer.innerHTML = ''; 
 
-        // 顯示景點按鈕
+        // 顯示預設景點
         places[city].forEach(place => {
             const button = document.createElement('button');
             button.textContent = place;
-            button.onclick = () => showPlace(place, button);
+            button.onclick = function() { showPlace(this, place); };
             placesButtonsContainer.appendChild(button);
         });
 
         // 顯示自定義景點
-        customPlaces[city].forEach(place => {
-            const button = document.createElement('button');
-            button.textContent = place;
-            button.onclick = () => showPlace(place, button);
-            placesButtonsContainer.appendChild(button);
-        });
-    }
-
-    function showPlace(place, button) {
-        // 變更按鈕顏色
-        if (!selectedPlaces.includes(place)) {
-            selectedPlaces.push(place);
-            button.classList.add('selected'); // 增加選擇的顏色
-        } else {
-            selectedPlaces = selectedPlaces.filter(p => p !== place);
-            button.classList.remove('selected'); // 移除選擇的顏色
+        if (customPlaces[city].length > 0) {
+            customPlaces[city].forEach(place => {
+                const button = document.createElement('button');
+                button.textContent = place;
+                button.onclick = function() { showPlace(this, place); };
+                placesButtonsContainer.appendChild(button);
+            });
         }
 
-        updateHistoryDisplay();
+        currentCity = city; // 更新當前城市
     }
 
-    function updateHistoryDisplay() {
+    function showPlace(button, place) {
+        if (selectedPlaces.length < 10) { // 限制10個選擇
+            button.classList.toggle('selected');
+            if (selectedPlaces.includes(place)) {
+                selectedPlaces = selectedPlaces.filter(p => p !== place);
+            } else {
+                selectedPlaces.push(place);
+            }
+        } else {
+            alert('最多只能選擇10個景點！');
+        }
+        updateDisplay();
+        updateSaveButton();
+    }
+
+    function updateDisplay() {
         const historyDisplay = document.getElementById('historyDisplay');
-        historyDisplay.textContent = '選擇的地點: ' + selectedPlaces.join(', ');
+        historyDisplay.textContent = selectedPlaces.join(', ') || '選擇歷史會顯示在這裡';
+    }
+
+    function updateSaveButton() {
+        const saveButton = document.querySelector('.controls button:nth-child(2)'); // 保存按鈕
+        if (selectedPlaces.length > 0) {
+            saveButton.classList.remove('disabled');
+        } else {
+            saveButton.classList.add('disabled');
+        }
     }
 
     function saveSelection() {
         if (selectedPlaces.length > 0) {
-            savedSelections.push('Day ' + (savedSelections.length + 1) + ': ' + selectedPlaces.join(', '));
+            const dateLabel = 第 ${savedSelections.length + 1} 天:;
+            savedSelections.push({ date: dateLabel, places: [...selectedPlaces] });
             localStorage.setItem('savedSelections', JSON.stringify(savedSelections));
-            document.getElementById('savedRecordsDisplay').innerHTML = savedSelections.join('<br>');
-            clearSelection(); // 儲存後清除選擇
-        } else {
-            alert('請選擇至少一個地點！');
+            loadSavedSelections();
+            clearSelection();
         }
+    }
+
+    function loadSavedSelections() {
+        const savedRecordsDisplay = document.getElementById('savedRecordsDisplay');
+        savedRecordsDisplay.innerHTML = '保存的選擇：<br>';
+        savedSelections.forEach(selection => {
+            savedRecordsDisplay.innerHTML += ${selection.date} ${selection.places.join(', ')}<br>;
+        });
     }
 
     function clearSelection() {
         selectedPlaces = [];
-        const placesButtonsContainer = document.getElementById('placesButtonsContainer');
-        const buttons = placesButtonsContainer.getElementsByTagName('button');
-        for (let button of buttons) {
-            button.classList.remove('selected'); // 重置顏色
-        }
-    }
-
-    function clearAll() {
-        clearSelection();
-        savedSelections = [];
-        localStorage.removeItem('savedSelections');
-        document.getElementById('savedRecordsDisplay').innerHTML = '';
+        const buttons = document.querySelectorAll('.places-buttons button');
+        buttons.forEach(button => button.classList.remove('selected'));
+        updateDisplay();
+        updateSaveButton();
     }
 
     function deleteLastSaved() {
         savedSelections.pop();
         localStorage.setItem('savedSelections', JSON.stringify(savedSelections));
-        document.getElementById('savedRecordsDisplay').innerHTML = savedSelections.join('<br>');
-    }
-
-    function addCustomPlace() {
-        const customPlaceInput = document.getElementById('customPlaceInput');
-        const customPlace = customPlaceInput.value.trim();
-        if (customPlace) {
-            customPlaces[currentCity].push(customPlace);
-            localStorage.setItem('customPlaces', JSON.stringify(customPlaces));
-            showPlaces(currentCity); // 重新顯示當前城市的按鈕
-            customPlaceInput.value = ''; // 清空輸入框
-        }
+        loadSavedSelections();
     }
 
     function deleteAllCustomPlaces() {
         customPlaces[currentCity] = [];
         localStorage.setItem('customPlaces', JSON.stringify(customPlaces));
-        showPlaces(currentCity); // 重新顯示當前城市的按鈕
+        showPlaces(currentCity); // 重新顯示
+    }
+
+    function addCustomPlace() {
+        const input = document.getElementById('customPlaceInput');
+        const placeName = input.value.trim();
+        if (placeName && !customPlaces[currentCity].includes(placeName)) {
+            customPlaces[currentCity].push(placeName);
+            localStorage.setItem('customPlaces', JSON.stringify(customPlaces));
+            showPlaces(currentCity); // 重新顯示
+            input.value = ''; // 清空輸入框
+        }
     }
 
     function exportToFile() {
-        const blob = new Blob([JSON.stringify(savedSelections)], { type: 'text/plain' });
+        const blob = new Blob([JSON.stringify(savedSelections, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'savedSelections.txt';
+        a.download = 'saved_selections.json';
         a.click();
         URL.revokeObjectURL(url);
     }
@@ -286,11 +295,11 @@
     function importFromFile(event) {
         const file = event.target.files[0];
         const reader = new FileReader();
-        reader.onload = function (e) {
-            const content = e.target.result;
-            savedSelections = JSON.parse(content);
+        reader.onload = function(e) {
+            const importedData = JSON.parse(e.target.result);
+            savedSelections = importedData;
             localStorage.setItem('savedSelections', JSON.stringify(savedSelections));
-            document.getElementById('savedRecordsDisplay').innerHTML = savedSelections.join('<br>');
+            loadSavedSelections();
         };
         reader.readAsText(file);
     }
@@ -299,22 +308,13 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // 監聽滾動事件，顯示或隱藏"回到頂部"按鈕
-    window.onscroll = function () {
-        const button = document.getElementById('scrollToTop');
-        if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
-            button.style.display = "block";
-        } else {
-            button.style.display = "none";
-        }
+    // 在加載頁面時讀取資料
+    window.onload = function() {
+        savedSelections = JSON.parse(localStorage.getItem('savedSelections')) || [];
+        customPlaces = JSON.parse(localStorage.getItem('customPlaces')) || { osaka: [], tokyo: [], hokkaido: [] };
+        loadSavedSelections();
     };
-
-    // 頁面載入時顯示大阪的景點
-    showPlaces('osaka');
 </script>
-
 </body>
 </html>
-
-
 
