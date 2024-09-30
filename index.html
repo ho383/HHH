@@ -39,6 +39,7 @@
         button.selected { background-color: #007bff; color: white; } /* 被選中的城市按鈕 */
         .saved-records { width: 100%; padding: 20px; background-color: #e8f4fa; border-top: 1px solid #ccc; max-height: 20%; overflow-y: auto; }
         #scrollToTop { display: none; position: fixed; bottom: 20px; right: 30px; font-size: 18px; background-color: #007bff; color: white; border: none; border-radius: 5px; padding: 10px; cursor: pointer; }
+        #copyButton { display: none; } /* 只在手機顯示的複製按鈕 */
     </style>
 </head>
 <body>
@@ -51,6 +52,7 @@
                 <button class="action-button" onclick="clearAll()">清除</button>
                 <button class="action-button" onclick="saveSelection()">保存</button>
                 <button class="action-button" onclick="deleteLastSaved()">刪除</button>
+                <button class="action-button" id="copyButton" onclick="copyToClipboard()">複製</button>
             </div>
             <div class="places-buttons" id="cityButtonsContainer">
                 <button class="city-button" onclick="showPlaces('osaka')">大阪</button>
@@ -126,6 +128,7 @@
 
     function displaySavedSelections() {
         document.getElementById('savedRecordsDisplay').innerHTML = savedSelections.length > 0 ? '保存的選擇：<br>' + savedSelections.join('<br>') : '保存的選擇：<br>';
+        document.getElementById('copyButton').style.display = savedSelections.length > 0 ? 'block' : 'none'; // 有保存選擇時顯示複製按鈕
     }
 
     function deleteLastSaved() {
@@ -160,7 +163,18 @@
         localStorage.setItem('customPlaces', JSON.stringify(customPlaces));
         showPlaces(currentCity);
     }
+
+    // 複製功能
+    function copyToClipboard() {
+        const textToCopy = savedSelections.join('\n'); // 取得需要複製的文本
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            alert('已複製保存的選擇！');
+        }).catch(err => {
+            console.error('複製失敗：', err);
+        });
+    }
 </script>
 
 </body>
 </html>
+
