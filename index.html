@@ -6,15 +6,54 @@
     <title>地點記錄</title>
     <style>
         body, .container {
-            display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: Arial, sans-serif;
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            font-family: Arial, sans-serif;
         }
-        .container { flex-direction: column; width: 100%; max-width: 480px; border: 1px solid #ccc; height: 80%; overflow: hidden; }
-        .top-section { display: flex; flex: 1; }
-        .display, .places { padding: 20px; overflow-y: auto; max-height: 100%; }
-        .display { width: 50%; background-color: #e8f4fa; border-right: 1px solid #ccc; }
-        .places { width: 50%; background-color: #f0f0f0; display: flex; flex-direction: column; }
-        .places-buttons { display: flex; flex-wrap: wrap; gap: 5px; }
-        button { padding: 10px; font-size: 14px; cursor: pointer; }
+        .container { 
+            flex-direction: column; 
+            width: 100%; 
+            max-width: 480px; 
+            border: 1px solid #ccc; 
+            height: 80%; 
+            overflow: hidden; 
+        }
+        .top-section { 
+            display: flex; 
+            flex: 1; 
+            width: 100%;
+        }
+        .display, .places { 
+            padding: 20px; 
+            overflow-y: auto; 
+            max-height: 100%; 
+        }
+        .display { 
+            width: 50%; 
+            background-color: #e8f4fa; 
+            border-right: 1px solid #ccc; 
+        }
+        .places { 
+            width: 50%; 
+            background-color: #f0f0f0; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .places-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            max-height: 150px; /* 設定最大高度，避免按鈕超出邊界 */
+            overflow-y: auto; /* 讓按鈕區域可以上下滾動 */
+        }
+        button { 
+            padding: 10px; 
+            font-size: 14px; 
+            cursor: pointer; 
+        }
         /* 第一行按鈕樣式 */
         .action-button {
             background-color: #000000; /* 新的顏色 */
@@ -36,10 +75,42 @@
         .city-button:hover {
             background-color: #cfe9ff;
         }
-        button.selected { background-color: #007bff; color: white; } /* 被選中的城市按鈕 */
-        .saved-records { width: 100%; padding: 20px; background-color: #e8f4fa; border-top: 1px solid #ccc; max-height: 20%; overflow-y: auto; }
-        #scrollToTop { display: none; position: fixed; bottom: 20px; right: 30px; font-size: 18px; background-color: #007bff; color: white; border: none; border-radius: 5px; padding: 10px; cursor: pointer; }
-        #copyButton { display: none; } /* 只在手機顯示的複製按鈕 */
+        button.selected { 
+            background-color: #007bff; 
+            color: white; 
+        } /* 被選中的城市按鈕 */
+        .saved-records { 
+            width: 100%; 
+            padding: 20px; 
+            background-color: #e8f4fa; 
+            border-top: 1px solid #ccc; 
+            max-height: 20%; 
+            overflow-y: auto; 
+        }
+        #scrollToTop { 
+            display: none; 
+            position: fixed; 
+            bottom: 20px; 
+            right: 30px; 
+            font-size: 18px; 
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            padding: 10px; 
+            cursor: pointer; 
+        }
+        /* 媒體查詢，僅在手機顯示複製按鈕 */
+        @media (max-width: 767px) {
+            #copyButton { 
+                display: inline-block; 
+            }
+        }
+        @media (min-width: 768px) {
+            #copyButton { 
+                display: none; 
+            }
+        }
     </style>
 </head>
 <body>
@@ -73,18 +144,16 @@
 <button id="scrollToTop" onclick="scrollToTop()">回到頂部</button>
 
 <script>
-    let selectedPlaces = [], savedSelections = JSON.parse(localStorage.getItem('savedSelections')) || [], currentCity = 'osaka', customPlaces = JSON.parse(localStorage.getItem('customPlaces')) || { osaka: [], tokyo: [], hokkaido: [] };
-    const places = { osaka: [ '黑門市場', 
-    '美國村', 
-    '心齋橋', 
-    '道頓堀'], tokyo: ['淺草寺', 
-    '東京塔', 
-    '迪士尼樂園', 
-    '台場'], hokkaido: ['大通公園', 
-    '小樽運河', 
-    '富良野花田', 
-    '千歲機場OUTLET', 
-    '狸小路商店街'] };
+    let selectedPlaces = [], 
+        savedSelections = JSON.parse(localStorage.getItem('savedSelections')) || [], 
+        currentCity = 'osaka', 
+        customPlaces = JSON.parse(localStorage.getItem('customPlaces')) || { osaka: [], tokyo: [], hokkaido: [] };
+    
+    const places = { 
+        osaka: [ '黑門市場', '美國村', '心齋橋', '道頓堀' ], 
+        tokyo: ['淺草寺', '東京塔', '迪士尼樂園', '台場'], 
+        hokkaido: ['大通公園', '小樽運河', '富良野花田', '千歲機場OUTLET', '狸小路商店街'] 
+    };
 
     function showPlaces(city) {
         currentCity = city;
@@ -97,18 +166,27 @@
     function createButton(place, container) {
         const button = document.createElement('button');
         button.textContent = place;
+        button.classList.add('city-button'); // 使用相同的按鈕樣式
         button.onclick = () => toggleSelection(place, button);
         container.appendChild(button);
     }
 
     function toggleSelection(place, button) {
         const index = selectedPlaces.indexOf(place);
-        index === -1 ? (selectedPlaces.push(place), button.classList.add('selected')) : (selectedPlaces.splice(index, 1), button.classList.remove('selected'));
+        if (index === -1) {
+            selectedPlaces.push(place);
+            button.classList.add('selected');
+        } else {
+            selectedPlaces.splice(index, 1);
+            button.classList.remove('selected');
+        }
         updateHistoryDisplay();
     }
 
     function updateHistoryDisplay() {
-        document.getElementById('historyDisplay').innerHTML = selectedPlaces.length > 0 ? '你選擇的景點：<br><br>' + selectedPlaces.join('<br>') : '選擇歷史會顯示在這裡';
+        document.getElementById('historyDisplay').innerHTML = selectedPlaces.length > 0 
+            ? '你選擇的景點：<br><br>' + selectedPlaces.join('<br>') 
+            : '選擇歷史會顯示在這裡';
     }
 
     function addCustomPlace() {
@@ -118,7 +196,9 @@
             localStorage.setItem('customPlaces', JSON.stringify(customPlaces));
             document.getElementById('customPlaceInput').value = '';
             showPlaces(currentCity);
-        } else alert('請輸入自訂義景點！');
+        } else {
+            alert('請輸入自訂義景點！');
+        }
     }
 
     function clearAll() {
@@ -133,11 +213,15 @@
             localStorage.setItem('savedSelections', JSON.stringify(savedSelections));
             displaySavedSelections();
             clearAll();
-        } else alert('請先選擇一些景點！');
+        } else {
+            alert('請先選擇一些景點！');
+        }
     }
 
     function displaySavedSelections() {
-        document.getElementById('savedRecordsDisplay').innerHTML = savedSelections.length > 0 ? '保存的選擇：<br>' + savedSelections.join('<br>') : '保存的選擇：<br>';
+        document.getElementById('savedRecordsDisplay').innerHTML = savedSelections.length > 0 
+            ? '保存的選擇：<br>' + savedSelections.join('<br>') 
+            : '保存的選擇：<br>';
         document.getElementById('copyButton').style.display = savedSelections.length > 0 ? 'block' : 'none'; // 有保存選擇時顯示複製按鈕
     }
 
@@ -165,7 +249,10 @@
     }
 
     window.onscroll = function() {
-        document.getElementById('scrollToTop').style.display = document.body.scrollTop > 100 || document.documentElement.scrollTop > 100 ? "block" : "none";
+        document.getElementById('scrollToTop').style.display = 
+            document.body.scrollTop > 100 || document.documentElement.scrollTop > 100 
+                ? "block" 
+                : "none";
     };
 
     function deleteAllCustomPlaces() {
