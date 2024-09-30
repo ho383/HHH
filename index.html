@@ -5,321 +5,161 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>地點記錄</title>
     <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
+        body, .container {
+            display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: Arial, sans-serif;
         }
-        .container {
-            display: flex;
-            width: 80%;
-            border: 1px solid #ccc;
-            height: 80%;
-        }
-        .places {
-            width: 30%;
-            padding: 20px;
-            background-color: #f0f0f0;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            max-height: 100%;
-        }
-        .places-buttons {
-            display: flex;
-            flex-wrap: wrap;
-        }
-        .places-buttons button {
-            margin: 5px;
-            width: calc(18% - 10px);
-            padding: 10px;
-            font-size: 14px;
-            background-color: #ffffff; /* 預設顏色 */
-        }
-        .places-buttons button.selected {
-            background-color: #007bff; /* 選擇後的顏色 */
-            color: white; /* 選擇後的文字顏色 */
-        }
-        .input-container {
-            display: flex;
-            margin-top: 10px;
-            width: 100%;
-        }
-        .display {
-            width: 40%;
-            padding: 20px;
-            text-align: left;
-            font-size: 18px;
-            background-color: #e8f4fa;
-            border-left: 1px solid #ccc;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: flex-start;
-        }
-        .saved-records {
-            width: 30%;
-            padding: 20px;
-            background-color: #e8f4fa;
-            border-right: 1px solid #ccc;
-            overflow-y: auto;
-            max-height: 100%;
-            text-align: center;
-        }
-        .disabled {
-            background-color: #cccccc;
-            pointer-events: none;
-        }
-        .controls {
-            display: flex;
-            justify-content: flex-start;
-            margin-bottom: 20px;
-        }
-        .controls button {
-            margin-right: 10px;
-        }
-        #scrollToTop {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            right: 30px;
-            z-index: 100;
-            font-size: 18px;
-            background-color: #007bff;
+        .container { flex-direction: column; width: 100%; max-width: 480px; border: 1px solid #ccc; height: 80%; overflow: hidden; }
+        .top-section { display: flex; flex: 1; }
+        .display, .places { padding: 20px; overflow-y: auto; max-height: 100%; }
+        .display { width: 50%; background-color: #e8f4fa; border-right: 1px solid #ccc; }
+        .places { width: 50%; background-color: #f0f0f0; display: flex; flex-direction: column; }
+        .places-buttons { display: flex; flex-wrap: wrap; gap: 5px; }
+        button { padding: 10px; font-size: 14px; cursor: pointer; }
+        /* 第一行按鈕樣式 */
+        .action-button {
+            background-color: #000000; /* 新的顏色 */
             color: white;
             border: none;
             border-radius: 5px;
-            padding: 10px;
-            cursor: pointer;
         }
+        .action-button:hover {
+            background-color: #218838; /* 鼠標懸停顏色 */
+        }
+        /* 城市按鈕樣式 */
+        .city-button {
+            background-color: #f0f0f0;
+            border: 1px solid #000000;
+            color: #007bff;
+            border-radius: 5px;
+            flex: 1; /* 讓城市按鈕均分寬度 */
+        }
+        .city-button:hover {
+            background-color: #cfe9ff;
+        }
+        button.selected { background-color: #007bff; color: white; } /* 被選中的城市按鈕 */
+        .saved-records { width: 100%; padding: 20px; background-color: #e8f4fa; border-top: 1px solid #ccc; max-height: 20%; overflow-y: auto; }
+        #scrollToTop { display: none; position: fixed; bottom: 20px; right: 30px; font-size: 18px; background-color: #007bff; color: white; border: none; border-radius: 5px; padding: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="saved-records" id="savedRecordsDisplay">
-    保存的選擇：<br>
-</div>
-
 <div class="container">
-    <div class="display" id="historyDisplay">
-        選擇歷史會顯示在這裡
-    </div>
-    <div class="places">
-        <div class="controls">
-            <button onclick="clearAll()">清除已選</button>
-            <button onclick="saveSelection()">保存</button>
-            <button onclick="deleteLastSaved()">刪除</button>
-            <button onclick="exportToFile()">匯出txt</button>
-            <input type="file" id="fileInput" accept=".txt" style="display:none" onchange="importFromFile(event)">
-            <button onclick="document.getElementById('fileInput').click()">匯入txt</button>
-        </div>
-
-        <!-- 新增城市分類按鈕 -->
-        <div class="places-buttons">
-            <button onclick="showPlaces('osaka')">大阪</button>
-            <button onclick="showPlaces('tokyo')">東京</button>
-            <button onclick="showPlaces('hokkaido')">北海道</button>
-            <button onclick="showPlaces('test')">自訂</button>
-        </div>
-
-        <!-- 旅遊景點按鈕 -->
-        <div class="places-buttons" id="placesButtonsContainer">
-            <!-- 大阪的景點 -->
-        </div>
-
-        <!-- 自訂義景點輸入 -->
-        <div class="input-container">
-            <input type="text" id="customPlaceInput" placeholder="請輸入文字">
-            <button onclick="addCustomPlace()">新增</button>
-            <button onclick="deleteAllCustomPlaces()">刪除全部</button> <!-- 刪除全部按鈕 -->
+    <div class="top-section">
+        <div class="display" id="historyDisplay">選擇歷史會顯示在這裡</div>
+        <div class="places">
+            <div>
+                <button class="action-button" onclick="clearAll()">清除已選</button>
+                <button class="action-button" onclick="saveSelection()">保存</button>
+                <button class="action-button" onclick="deleteLastSaved()">刪除</button>
+            </div>
+            <div class="places-buttons" id="cityButtonsContainer">
+                <button class="city-button" onclick="showPlaces('osaka')">大阪</button>
+                <button class="city-button" onclick="showPlaces('tokyo')">東京</button>
+                <button class="city-button" onclick="showPlaces('hokkaido')">北海道</button>
+            </div>
+            <div class="places-buttons" id="placesButtonsContainer"></div>
+            <div>
+                <input type="text" id="customPlaceInput" placeholder="請輸入文字">
+                <button class="action-button" onclick="addCustomPlace()">新增</button>
+                <button class="action-button" onclick="deleteAllCustomPlaces()">刪除全部</button>
+            </div>
         </div>
     </div>
+    <div class="saved-records" id="savedRecordsDisplay">保存的選擇：<br></div>
 </div>
 
 <button id="scrollToTop" onclick="scrollToTop()">回到頂部</button>
 
 <script>
-    let selectedPlaces = [];
-    let savedSelections = JSON.parse(localStorage.getItem('savedSelections')) || []; // 讀取已保存的選擇
-    let currentCity = ''; // 追蹤當前城市
-    let customPlaces = JSON.parse(localStorage.getItem('customPlaces')) || { osaka: [], tokyo: [], hokkaido: [] }; // 儲存每個城市的自定義景點
-
-    const places = {
-        osaka: [
-            '道頓堀', '心齋橋', '環球影城', '黑門市場', '大阪城', 
-            '美國村', '天保山海遊館', '通天閣', '天王寺動物園', 
-            '奈良鹿公園', '東大寺', '四天王寺', '梅田藍天大廈', 
-            '大阪科學館', '住之江水族館', '法善寺', '九條市場', 
-            '谷町六丁目', '新世界', '大阪市立美術館', '貓之森',
-            '淀川河川公園', '南港ATC', '中之島', '御堂筋', 
-            '吹田市立博物館', '日之出大廈', '大阪環狀線', '松下電器博物館', 
-            '千里中央', '岸和田城', '堺市博物館', '泉佐野市',
-            '泉北高速鐵道', '堺市立文化館', '天王寺', '舞洲',
-            '長居公園', '兵庫縣立美術館', '福島區', '阿倍野',
-        ],
-        tokyo: [
-            '淺草寺', '東京塔', '迪士尼樂園', '秋葉原', '澀谷交叉口',
-            '新宿御苑', '原宿', '東京晴空塔', '築地市場', '上野公園', 
-            '代代木公園', '淺草文化觀光中心', '東京國立博物館', '六本木之丘', 
-            '池袋陽光城', '秋葉原電器街', '銀座', '澀谷109', 
-            '新宿歌舞伎町', '多摩動物園', '歌舞伎座', '橫濱',
-            '台場', '上野動物園', '東京巨蛋', '谷中',
-            '駒澤公園', '千鳥町', '表參道', '皇居',
-            '東京藝大', '神保町', '三鷹之森吉卜力美術館', '東京都廳',
-            '成田山新勝寺', '根津神社', '日比谷公園', '國立西洋美術館',
-        ],
-        hokkaido: [
-            '大通公園', '小樽運河', '富良野花田', '札幌電視塔', '登別地獄谷',
-            '藻岩山', '旭山動物園', '支笏湖', '函館夜景', '富良野滑雪場',
-            '小樽運河玻璃工藝', '白色戀人公園', '札幌啤酒園', '北海道神宮',
-            '摩周湖', '北見市', '大雪山', '網走監獄',
-            '釧路濕原', '十勝平原', '美瑛花田', '富良野薰衣草',
-            '支笏湖溫泉', '幌延町', '根室市', '利尻島',
-            '羅臼', '根室半島', '北見市釧路', '登別溫泉',
-            '西表島', '美瑛青池', '厚岸湖', '室蘭',
-            '札幌羊之丘展望台', '滝川市', '白老', '天塩町',
-        ],
-        test:['吃飯','睡覺',]
-    };
+    let selectedPlaces = [], savedSelections = JSON.parse(localStorage.getItem('savedSelections')) || [], currentCity = 'osaka', customPlaces = JSON.parse(localStorage.getItem('customPlaces')) || { osaka: [], tokyo: [], hokkaido: [] };
+    const places = { osaka: ['道頓堀', '心齋橋', '環球影城'], tokyo: ['淺草寺', '東京塔', '迪士尼樂園'], hokkaido: ['大通公園', '小樽運河', '富良野花田'] };
 
     function showPlaces(city) {
-        currentCity = city; // 設置當前城市
+        currentCity = city;
         const placesContainer = document.getElementById('placesButtonsContainer');
         placesContainer.innerHTML = '';
+        [...places[city], ...customPlaces[city]].forEach(place => createButton(place, placesContainer));
+        highlightSelectedCity(city); // 高亮顯示當前選擇的城市
+    }
 
-        places[city].forEach(place => {
-            const button = document.createElement('button');
-            button.textContent = place;
-            button.onclick = () => toggleSelection(place, button);
-            placesContainer.appendChild(button);
-        });
-
-        // 顯示自定義景點
-        customPlaces[city].forEach(customPlace => {
-            const button = document.createElement('button');
-            button.textContent = customPlace;
-            button.onclick = () => toggleSelection(customPlace, button);
-            placesContainer.appendChild(button);
-        });
+    function createButton(place, container) {
+        const button = document.createElement('button');
+        button.textContent = place;
+        button.onclick = () => toggleSelection(place, button);
+        container.appendChild(button);
     }
 
     function toggleSelection(place, button) {
         const index = selectedPlaces.indexOf(place);
-        if (index === -1) {
-            if (selectedPlaces.length < 10) {
-                selectedPlaces.push(place);
-                button.classList.add('selected'); // 改變按鈕顏色
-            } else {
-                alert('最多只能選擇 10 個景點！');
-            }
-        } else {
-            selectedPlaces.splice(index, 1);
-            button.classList.remove('selected'); // 重置按鈕顏色
-        }
-        updateHistoryDisplay(); // 更新顯示選擇歷史
+        index === -1 ? (selectedPlaces.push(place), button.classList.add('selected')) : (selectedPlaces.splice(index, 1), button.classList.remove('selected'));
+        updateHistoryDisplay();
     }
 
     function updateHistoryDisplay() {
-        const historyDisplay = document.getElementById('historyDisplay');
-        historyDisplay.innerHTML = selectedPlaces.length > 0 
-            ? '你選擇的景點：<br><br>' + selectedPlaces.join('<br>') 
-            : '選擇歷史會顯示在這裡';
+        document.getElementById('historyDisplay').innerHTML = selectedPlaces.length > 0 ? '你選擇的景點：<br><br>' + selectedPlaces.join('<br>') : '選擇歷史會顯示在這裡';
     }
 
     function addCustomPlace() {
-        const input = document.getElementById('customPlaceInput');
-        const customPlace = input.value.trim();
+        const customPlace = document.getElementById('customPlaceInput').value.trim();
         if (customPlace) {
-            if (!customPlaces[currentCity]) customPlaces[currentCity] = [];
             customPlaces[currentCity].push(customPlace);
-            localStorage.setItem('customPlaces', JSON.stringify(customPlaces)); // 儲存自定義景點
-            input.value = ''; // 清空輸入框
-            showPlaces(currentCity); // 更新顯示
-        } else {
-            alert('請輸入自訂義景點！');
-        }
-    }
-
-    function deleteAllCustomPlaces() {
-        if (confirm('確定要刪除所有自訂義景點嗎？')) {
-            customPlaces[currentCity] = [];
-            localStorage.setItem('customPlaces', JSON.stringify(customPlaces)); // 更新儲存的自定義景點
-            showPlaces(currentCity); // 更新顯示
-        }
+            localStorage.setItem('customPlaces', JSON.stringify(customPlaces));
+            document.getElementById('customPlaceInput').value = '';
+            showPlaces(currentCity);
+        } else alert('請輸入自訂義景點！');
     }
 
     function clearAll() {
         selectedPlaces = [];
-        const buttons = document.querySelectorAll('.places-buttons button');
-        buttons.forEach(button => {
-            button.classList.remove('selected'); // 重置所有按鈕顏色
-        });
-        updateHistoryDisplay(); // 清空選擇歷史
+        document.querySelectorAll('.places-buttons button').forEach(button => button.classList.remove('selected'));
+        updateHistoryDisplay();
     }
 
     function saveSelection() {
         if (selectedPlaces.length > 0) {
             savedSelections.push(`第 ${savedSelections.length + 1} 天: ${selectedPlaces.join(', ')}`);
-            localStorage.setItem('savedSelections', JSON.stringify(savedSelections)); // 儲存選擇
-            displaySavedSelections(); // 更新顯示
-            clearAll(); // 清除當前選擇
-        } else {
-            alert('請先選擇一些景點！');
-        }
+            localStorage.setItem('savedSelections', JSON.stringify(savedSelections));
+            displaySavedSelections();
+            clearAll();
+        } else alert('請先選擇一些景點！');
     }
 
     function displaySavedSelections() {
-        const savedRecordsDisplay = document.getElementById('savedRecordsDisplay');
-        savedRecordsDisplay.innerHTML = '保存的選擇：<br>' + savedSelections.join('<br>');
+        document.getElementById('savedRecordsDisplay').innerHTML = savedSelections.length > 0 ? '保存的選擇：<br>' + savedSelections.join('<br>') : '保存的選擇：<br>';
     }
 
     function deleteLastSaved() {
-        savedSelections.pop(); // 刪除最後一項
-        localStorage.setItem('savedSelections', JSON.stringify(savedSelections)); // 更新儲存的選擇
-        displaySavedSelections(); // 更新顯示
-    }
-
-    function exportToFile() {
-        const blob = new Blob([savedSelections.join('\n')], { type: 'text/plain' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'myTravel.txt';
-        link.click();
-    }
-
-    function importFromFile(event) {
-        const file = event.target.files[0];
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const contents = e.target.result;
-            const lines = contents.split('\n');
-            savedSelections = lines.filter(line => line.trim() !== ''); // 過濾空行
-            localStorage.setItem('savedSelections', JSON.stringify(savedSelections)); // 更新儲存
-            displaySavedSelections(); // 更新顯示
-        };
-        reader.readAsText(file);
+        savedSelections.pop();
+        localStorage.setItem('savedSelections', JSON.stringify(savedSelections));
+        displaySavedSelections();
     }
 
     window.onload = function() {
-        displaySavedSelections(); // 加載保存的選擇
+        displaySavedSelections();
+        showPlaces(currentCity);
+        highlightSelectedCity(currentCity);
     };
+
+    function highlightSelectedCity(city) {
+        document.querySelectorAll('#cityButtonsContainer button').forEach(button => {
+            button.classList.remove('selected'); // 移除所有城市按鈕的選中狀態
+            if (button.textContent === city) button.classList.add('selected'); // 只有當前城市保持選中狀態
+        });
+    }
 
     function scrollToTop() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // 當捲動到一定位置時顯示“回到頂部”按鈕
     window.onscroll = function() {
-        const scrollToTopBtn = document.getElementById('scrollToTop');
-        if (document.body.scrollTop > 100 || document.documentElement.scrollTop > 100) {
-            scrollToTopBtn.style.display = "block";
-        } else {
-            scrollToTopBtn.style.display = "none";
-        }
+        document.getElementById('scrollToTop').style.display = document.body.scrollTop > 100 || document.documentElement.scrollTop > 100 ? "block" : "none";
     };
+
+    function deleteAllCustomPlaces() {
+        customPlaces[currentCity] = [];
+        localStorage.setItem('customPlaces', JSON.stringify(customPlaces));
+        showPlaces(currentCity);
+    }
 </script>
 
 </body>
